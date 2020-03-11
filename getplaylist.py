@@ -10,6 +10,12 @@ import requests
 from lxml.html import fromstring
 
 
+def get_sys_proxy():
+    import urllib
+    p = urllib.request.getproxies()   
+    return p.get('https', '') or p.get('https', '')
+
+PROXY = get_sys_proxy()
 # extractor 命名规则 xxxxDownloader
 class YoukuDownloader:
     # fetcher = 'youtube-dl -o "{save_dir}/%(title)s.%(ext)s" --proxy ""'
@@ -22,7 +28,7 @@ class YoukuDownloader:
 
 
 class BilibiliDownloader:
-    fetcher = 'youtube-dl -o "{save_dir}/%(title)s.%(ext)s" --proxy ""'
+    fetcher = 'youtube-dl -o "{save_dir}/%(title)s.%(ext)s" '#--proxy ' + PROXY
     
     @classmethod 
     def extract(cls, page):
@@ -35,6 +41,7 @@ class BilibiliDownloader:
                     'title': v['part']
                 } for v in data['videoData']['pages']
                ]
+
 
 
 def fetch_page(url):
@@ -77,6 +84,7 @@ def download_list(url, save_dir):
 
 
 if __name__ == '__main__':
+    # get_sys_proxy();exit()
     p = optparse.OptionParser()
     p.add_option('-d', '--save-dir', action='store', dest='save_dir', default='.')
     option, args = p.parse_args()
