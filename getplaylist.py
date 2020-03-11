@@ -77,7 +77,6 @@ def download_list(url, save_dir):
 
 
 if __name__ == '__main__':
-    # url = sys.argv[-1]
     p = optparse.OptionParser()
     p.add_option('-d', '--save-dir', action='store', dest='save_dir', default='.')
     option, args = p.parse_args()
