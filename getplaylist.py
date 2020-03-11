@@ -3,6 +3,7 @@ import subprocess
 import optparse
 import shlex
 import re
+import json
 from urllib.parse import urlparse, urljoin
 
 import requests
@@ -16,7 +17,8 @@ class YoukuDownloader:
     
     @classmethod
     def extract(cls, page):
-        return fromstring(page).xpath('(//div[@class="anthology-content"])[1]/div[@class="pic-text-item"]/a/@href')
+        return [ {'url': url} for url in 
+                     fromstring(page).xpath('(//div[@class="anthology-content"])[1]/div[@class="pic-text-item"]/a/@href')]
 
 
 class BilibiliDownloader:
@@ -24,8 +26,15 @@ class BilibiliDownloader:
     
     @classmethod 
     def extract(cls, page):
-        data = re.search(r'window.__INITIAL_STATE__=(.*)')
-        return [urljoin('https://bilibili.com', lnk) for lnk in fromstring(page).xpath('//div[@class="cur-list"]/ul[@class="list-box"]/li/a/@href')]
+        data = json.loads(re.search(r'window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s', page, flags=re.DOTALL).group(1))
+        aid = data['aid']
+        import pprint;pprint.pprint(data)
+        return [
+                {
+                    'url': urljoin('https://bilibili.com/video', f'av{aid}?p={v["page"]}'),
+                    'title': v['part']
+                } for v in data['videoData']['pages']
+               ]
 
 
 def fetch_page(url):
@@ -52,12 +61,16 @@ def download_list(url, save_dir):
     save_dir = save_dir.replace('\\', '/')
     extractor = get_extractor(url)
     page = fetch_page(url)
-    print(page)
-    urls = extractor.extract(page)
-    print('Total', len(urls))
-    for url in urls:
-        print(url)
-        cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
+    # print(page)
+    info = extractor.extract(page)
+    print('Total', len(info))
+    for v in info:
+        print(v.get('url'))
+        if 'title' in v:
+            cmd = extractor.fetcher.format(save_dir=save_dir).replace(r'%(title)s', v['title'])
+            cmd = f'{cmd} "{url}"'
+        else:
+            cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
         print(cmd)
         cmd = shlex.split(cmd)
         subprocess.run(cmd)
