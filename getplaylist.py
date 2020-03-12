@@ -43,6 +43,11 @@ class BilibiliDownloader:
                ]
 
 
+class YoutubeDownloader:
+    use_origin = True
+
+    fetcher = 'youtube-dl -o "{save_dir}/%(playlist_index)s - %(title)s.%(ext)s" --yes-playlist'
+
 
 def fetch_page(url):
     s = requests.session()
@@ -65,22 +70,28 @@ def get_extractor(url):
 
 
 def download_list(url, save_dir):
+    print(save_dir)
     save_dir = save_dir.replace('\\', '/')
     extractor = get_extractor(url)
-    page = fetch_page(url)
-    # print(page)
-    info = extractor.extract(page)
-    print('Total', len(info))
-    for v in info:
-        print(v.get('url'))
-        if 'title' in v:
-            cmd = extractor.fetcher.format(save_dir=save_dir).replace(r'%(title)s', v['title'])
-            cmd = f'{cmd} "{url}"'
-        else:
-            cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
+    if extractor.use_origin:
+        cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
         print(cmd)
-        cmd = shlex.split(cmd)
-        subprocess.run(cmd)
+        subprocess.run(shlex.split(cmd))
+    else:
+        page = fetch_page(url)
+        # print(page)
+        info = extractor.extract(page)
+        print('Total', len(info))
+        for v in info:
+            print(v.get('url'))
+            if 'title' in v:
+                cmd = extractor.fetcher.format(save_dir=save_dir).replace(r'%(title)s', v['title'])
+                cmd = f'{cmd} "{url}"'
+            else:
+                cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
+            print(cmd)
+            cmd = shlex.split(cmd)
+            subprocess.run(cmd)
 
 
 if __name__ == '__main__':
