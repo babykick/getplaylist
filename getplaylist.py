@@ -17,8 +17,10 @@ def get_sys_proxy():
 
 PROXY = get_sys_proxy()
 
+
 class BaseDownloader:
     use_origin = False
+
 
 # extractor 命名规则 xxxxDownloader
 class YoukuDownloader(BaseDownloader):
