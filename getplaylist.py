@@ -16,8 +16,12 @@ def get_sys_proxy():
     return p.get('https', '') or p.get('https', '')
 
 PROXY = get_sys_proxy()
+
+class BaseDownloader:
+    use_origin = False
+
 # extractor 命名规则 xxxxDownloader
-class YoukuDownloader:
+class YoukuDownloader(BaseDownloader):
     # fetcher = 'youtube-dl -o "{save_dir}/%(title)s.%(ext)s" --proxy ""'
     fetcher = 'youtube-dl -o "{save_dir}/%(title)s.%(ext)s"'
     
@@ -27,7 +31,7 @@ class YoukuDownloader:
                      fromstring(page).xpath('(//div[@class="anthology-content"])[1]/div[@class="pic-text-item"]/a/@href')]
 
 
-class BilibiliDownloader:
+class BilibiliDownloader(BaseDownloader):
     fetcher = 'youtube-dl -o "{save_dir}/%(title)s.%(ext)s" '#--proxy ' + PROXY
     
     @classmethod 
@@ -43,7 +47,7 @@ class BilibiliDownloader:
                ]
 
 
-class YoutubeDownloader:
+class YoutubeDownloader(BaseDownloader):
     use_origin = True
 
     fetcher = 'youtube-dl -o "{save_dir}/%(playlist_index)s - %(title)s.%(ext)s" --yes-playlist'
