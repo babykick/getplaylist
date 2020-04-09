@@ -105,7 +105,7 @@ def download_list(url, save_dir, listfile):
 
     print('Total', len(info))
     for v in info:
-        url = v.get('url')
+        url = v['url']
         print(url)
         extractor = get_extractor(url)
         if 'title' in v:
