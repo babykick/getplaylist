@@ -1,6 +1,7 @@
+import os
 import sys
 import subprocess
-import optparse
+import argparse
 import shlex
 import re
 import json
@@ -16,6 +17,13 @@ def get_sys_proxy():
     return p.get('https', '') or p.get('https', '')
 
 PROXY = get_sys_proxy()
+
+cur_dir = os.path.abspath(os.path.dirname(__file__))
+parser = argparse.ArgumentParser()
+parser.add_argument('url', nargs='?', help='target playlist url')
+parser.add_argument('--listfile', help='file containing video links')
+parser.add_argument('--savedir', default=cur_dir, help='directory downloaded video saved')
+args = parser.parse_args()
 
 
 class BaseDownloader:
@@ -75,35 +83,41 @@ def get_extractor(url):
         raise NotImplementedError(f'No extractor found for {domain_name}')
 
 
-def download_list(url, save_dir):
-    print(save_dir)
-    save_dir = save_dir.replace('\\', '/')
-    extractor = get_extractor(url)
-    if extractor.use_origin:
-        cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
-        print(cmd)
-        subprocess.run(shlex.split(cmd))
-    else:
-        page = fetch_page(url)
-        # print(page)
-        info = extractor.extract(page)
-        print('Total', len(info))
-        for v in info:
-            print(v.get('url'))
-            if 'title' in v:
-                cmd = extractor.fetcher.format(save_dir=save_dir).replace(r'%(title)s', v['title'])
-                cmd = f'{cmd} "{url}"'
-            else:
-                cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
+def download_list(url, save_dir, listfile):
+    info = []
+    if url:
+        extractor = get_extractor(url)
+        if extractor.use_origin:
+            cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
             print(cmd)
-            cmd = shlex.split(cmd)
-            subprocess.run(cmd)
+            subprocess.run(shlex.split(cmd))
+            return
+        else:
+            page = fetch_page(url)
+            info = extractor.extract(page)
+
+    if listfile and os.path.exists(listfile):
+        info = [{'url': line} for line in open(listfile)]
+    
+    if len(info) == 0:
+        print('No playlist or video url provided')
+        exit()
+
+    print('Total', len(info))
+    for v in info:
+        url = v.get('url')
+        print(url)
+        extractor = get_extractor(url)
+        if 'title' in v:
+            cmd = extractor.fetcher.format(save_dir=save_dir).replace(r'%(title)s', v['title'])
+            cmd = f'{cmd} "{url}"'
+        else:
+            cmd = f'{extractor.fetcher.format(save_dir=save_dir)} "{url}"'
+        print(cmd)
+        cmd = shlex.split(cmd)
+        subprocess.run(cmd)
 
 
 if __name__ == '__main__':
-    # get_sys_proxy();exit()
-    p = optparse.OptionParser()
-    p.add_option('-d', '--save-dir', action='store', dest='save_dir', default='.')
-    option, args = p.parse_args()
-    url = args[0]
-    download_list(url, option.save_dir)
+    download_list(args.url, args.savedir, args.listfile)
+
