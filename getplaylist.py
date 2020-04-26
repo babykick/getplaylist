@@ -118,6 +118,10 @@ def download_list(url, save_dir, listfile):
         subprocess.run(cmd)
 
 
-if __name__ == '__main__':
+def main():
     download_list(args.url, args.savedir, args.listfile)
 
+
+if __name__ == '__main__':
+    main()
+    
