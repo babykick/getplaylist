@@ -56,8 +56,8 @@ class BaseDownloader:
         self.listfile = args.pop('listfile')
     
     def get_fetcher(self):
-        self.save_dir = self.save_dir.replace("\\", "/")
-        format = f'{self.save_dir}/{"" if self.no_index else "%(playlist_index)s - "}%(title)s.%(ext)s'
+        # self.save_dir = self.save_dir.replace("\\", "/")
+        format = os.path.join(self.save_dir, f'{"" if self.no_index else "%(playlist_index)s - "}%(title)s.%(ext)s')
         return f'youtube-dl "{self.url}" -o "{format}" {self.get_extra_args()} {"--proxy " + self.proxy if self.proxy else ""}' 
 
     def get_extra_args(self):
@@ -137,7 +137,6 @@ def get_downloader(url):
 
 def download_list(args):
     dl = get_downloader(args.url)(**vars(args))
-    print(dl)
     dl.download()
 
 
