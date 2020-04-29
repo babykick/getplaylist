@@ -25,7 +25,7 @@ def _argparse():
     parser.add_argument('url', nargs='?', help='target playlist url')
     parser.add_argument('--listfile', help='file containing video links')
     parser.add_argument('--savedir', default=cur_dir, help='directory downloaded video saved')
-    parser.add_argument('--noindex', action='store_true', help='use index or not in format')
+    parser.add_argument('--useindex', action='store_true', help='use index or not in format')
     
     return parser.parse_args()
 
@@ -46,10 +46,10 @@ def fetch_page(url):
 
 class BaseDownloader:
     use_origin = False
-    no_index = False
+    use_index = False
 
     def __init__(self, **args):
-        self.no_index = self.no_index or args.pop('noindex')
+        self.use_index = self.use_index or args.pop('useindex')
         self.save_dir = args.pop('savedir', '')
         self.proxy = args.pop('proxy', '')
         self.url = args.pop('url')
@@ -57,7 +57,7 @@ class BaseDownloader:
     
     def get_fetcher(self):
         # self.save_dir = self.save_dir.replace("\\", "/")
-        format = os.path.join(self.save_dir, f'{"" if self.no_index else "%(playlist_index)s - "}%(title)s.%(ext)s')
+        format = os.path.join(self.save_dir, f'{"" if not self.use_index else "%(playlist_index)s - "}%(title)s.%(ext)s')
         return f'youtube-dl "{self.url}" -o "{format}" {self.get_extra_args()} {"--proxy " + self.proxy if self.proxy else ""}' 
 
     def get_extra_args(self):
@@ -105,7 +105,7 @@ class YoukuDownloader(BaseDownloader):
 
 
 class BilibiliDownloader(BaseDownloader):
-    no_index = True
+    use_index = False
 
     def extract(cls, page):
         data = json.loads(re.search(r'window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s', page, flags=re.DOTALL).group(1))
