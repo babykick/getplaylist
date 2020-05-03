@@ -1,5 +1,6 @@
 README.md
 getplaylist.py
+setup.py
 getplaylist.egg-info/PKG-INFO
 getplaylist.egg-info/SOURCES.txt
 getplaylist.egg-info/dependency_links.txt
