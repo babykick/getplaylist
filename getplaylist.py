@@ -135,7 +135,6 @@ class ListFileDownloader(BaseDownloader):
         self.download_from_list(info)
 
 
-
 def get_downloader(url):
     domain_name = urlparse(url).netloc.split('.')[-2]
     ex = globals().get(f'{domain_name.title()}Downloader')
