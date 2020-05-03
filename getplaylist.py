@@ -11,7 +11,7 @@ import requests
 from lxml.html import fromstring
 
 
-cur_dir = os.path.abspath(os.path.dirname(__file__))
+cur_dir = os.path.curdir
 
 
 def get_sys_proxy():
