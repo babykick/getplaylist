@@ -49,29 +49,31 @@ class BaseDownloader:
     use_index = False
 
     def __init__(self, **args):
-        self.use_index = self.use_index or args.pop('useindex')
+        self.use_index = self.use_index or args.pop('useindex', False)
         self.save_dir = args.pop('savedir', '')
         self.proxy = args.pop('proxy', '')
-        self.url = args.pop('url')
-        self.listfile = args.pop('listfile')
+        self.url = args.pop('url', '')
+        self.listfile = args.pop('listfile', '')
+        self.args = args
     
-    def get_fetcher(self):
+    def get_fetcher(self, url):
         # self.save_dir = self.save_dir.replace("\\", "/")
         format = os.path.join(self.save_dir, f'{"" if not self.use_index else "%(playlist_index)s - "}%(title)s.%(ext)s')
-        return f'youtube-dl "{self.url}" -o "{format}" {self.get_extra_args()} {"--proxy " + self.proxy if self.proxy else ""}' 
+        return f'youtube-dl "{url}" -o "{format}" {self.get_extra_args()} {"--proxy " + self.proxy if self.proxy else ""}' 
 
     def get_extra_args(self):
         return ''
     
-    def download_from_list(self, info):
+    def download_from_list(self, info, select_downloader=False):
         print('Total', len(info))
         for v in info:
-            url = v['url']
+            url = v['url'].strip()
             print(url)
+            dl = get_downloader(url)(**self.args) if select_downloader else self
             if 'title' in v:
-                cmd = self.get_fetcher().replace(r'%(title)s', v['title'])
+                cmd = dl.get_fetcher(url).replace(r'%(title)s', v['title'])
             else:
-                cmd = self.get_fetcher()
+                cmd = dl.get_fetcher(url)
             print(cmd)
             cmd = shlex.split(cmd)
             subprocess.run(cmd)
@@ -130,9 +132,9 @@ class YoutubeDownloader(BaseDownloader):
 class ListFileDownloader(BaseDownloader):
     def download(self):
         if self.listfile and os.path.exists(self.listfile):
-            info = [{'url': line} for line in open(listfile)]
+            info = [{'url': line} for line in open(self.listfile)]
 
-        self.download_from_list(info)
+        self.download_from_list(info, select_downloader=True)
 
 
 def get_downloader(url):
@@ -146,7 +148,7 @@ def get_downloader(url):
 
 def download_list(args):
     if args.listfile:
-        dl = ListFileDownloader
+        dl = ListFileDownloader(**vars(args))
     elif args.url:
         dl = get_downloader(args.url)(**vars(args))
     else:
