@@ -62,27 +62,8 @@ class BaseDownloader:
 
     def get_extra_args(self):
         return ''
-
-    def download(self):
-        save_dir, listfile = self.save_dir, self.listfile
-        info = []
-        if self.url:
-            if self.use_origin:
-                cmd = self.get_fetcher()
-                print(cmd)
-                subprocess.run(shlex.split(cmd))
-                return
-            else:
-                page = fetch_page(self.url)
-                info = self.extract(page)
-
-        if listfile and os.path.exists(listfile):
-            info = [{'url': line} for line in open(listfile)]
-        
-        if len(info) == 0:
-            print('No playlist or video url provided')
-            exit()
-
+    
+    def download_from_list(self, info):
         print('Total', len(info))
         for v in info:
             url = v['url']
@@ -94,6 +75,26 @@ class BaseDownloader:
             print(cmd)
             cmd = shlex.split(cmd)
             subprocess.run(cmd)
+
+    def download(self):
+        save_dir = self.save_dir
+        info = []
+        if self.url:
+            if self.use_origin:
+                cmd = self.get_fetcher()
+                print(cmd)
+                subprocess.run(shlex.split(cmd))
+                return
+            else:
+                page = fetch_page(self.url)
+                info = self.extract(page)
+
+        
+        if len(info) == 0:
+            print('No playlist or video url provided')
+            exit()
+        
+        self.download_from_list(info)
 
 
 # extractor 命名规则 xxxxDownloader
@@ -126,6 +127,15 @@ class YoutubeDownloader(BaseDownloader):
         return '--yes-playlist'
 
 
+class ListFileDownloader(BaseDownloader):
+    def download(self):
+        if self.listfile and os.path.exists(self.listfile):
+            info = [{'url': line} for line in open(listfile)]
+
+        self.download_from_list(info)
+
+
+
 def get_downloader(url):
     domain_name = urlparse(url).netloc.split('.')[-2]
     ex = globals().get(f'{domain_name.title()}Downloader')
@@ -136,7 +146,13 @@ def get_downloader(url):
     
 
 def download_list(args):
-    dl = get_downloader(args.url)(**vars(args))
+    if args.listfile:
+        dl = ListFileDownloader
+    elif args.url:
+        dl = get_downloader(args.url)(**vars(args))
+    else:
+        print('url or list file not given')
+        exit()
     dl.download()
 
 
