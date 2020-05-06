@@ -49,13 +49,13 @@ class BaseDownloader:
     use_index = False
 
     def __init__(self, **args):
+        self.args = args.copy()
         self.use_index = self.use_index or args.pop('useindex', False)
         self.save_dir = args.pop('savedir', '')
         self.proxy = args.pop('proxy', '')
         self.url = args.pop('url', '')
         self.listfile = args.pop('listfile', '')
-        self.args = args
-    
+        
     def get_fetcher(self, url):
         # self.save_dir = self.save_dir.replace("\\", "/")
         format = os.path.join(self.save_dir, f'{"" if not self.use_index else "%(playlist_index)s - "}%(title)s.%(ext)s')
