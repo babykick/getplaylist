@@ -116,7 +116,6 @@ class BilibiliDownloader(BaseDownloader):
     def extract(cls, page):
         data = json.loads(re.search(r'window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s', page, flags=re.DOTALL).group(1))
         aid = data['aid']
-        import pprint;pprint.pprint(data)
         return [
                 {
                     'url': urljoin('https://bilibili.com/video', f'av{aid}?p={v["page"]}'),
@@ -129,7 +128,7 @@ class YoutubeDownloader(BaseDownloader):
     use_origin = True
 
     def get_extra_args(self):
-        if  self.use_origin:
+        if  self.use_origin and self.url and 'list=' in self.url:
             return '--yes-playlist'
         return ""
         
