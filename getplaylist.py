@@ -26,6 +26,7 @@ def _argparse():
     parser.add_argument('--listfile', help='file containing video links')
     parser.add_argument('--savedir', default=cur_dir, help='directory downloaded video saved')
     parser.add_argument('--useindex', action='store_true', help='use index or not in format')
+    parser.add_argument('--displayid', action='store_true', help='add display id in output template')
     
     return parser.parse_args()
 
@@ -47,6 +48,7 @@ def fetch_page(url):
 class BaseDownloader:
     use_origin = False
     use_index = False
+    display_id = False
 
     def __init__(self, **args):
         self.args = args.copy()
@@ -55,10 +57,11 @@ class BaseDownloader:
         self.proxy = args.pop('proxy', '')
         self.url = args.pop('url', '')
         self.listfile = args.pop('listfile', '')
+        self.display_id = args.pop('displayid', '')
         
     def get_fetcher(self, url):
         # self.save_dir = self.save_dir.replace("\\", "/")
-        format = os.path.join(self.save_dir, f'{"" if not self.use_index else "%(playlist_index)s - "}%(title)s.%(ext)s')
+        format = os.path.join(self.save_dir, f'{"" if not self.use_index else "%(playlist_index)s - "}%(title)s({"%(display_id)s" if self.display_id else ""}).%(ext)s')
         return f'youtube-dl "{url}" -o "{format}" {self.get_extra_args()} {"--proxy " + self.proxy if self.proxy else ""}' 
 
     def get_extra_args(self):
@@ -126,8 +129,10 @@ class YoutubeDownloader(BaseDownloader):
     use_origin = True
 
     def get_extra_args(self):
-        return '--yes-playlist'
-
+        if  self.use_origin:
+            return '--yes-playlist'
+        return ""
+        
 
 class ListFileDownloader(BaseDownloader):
     def download(self):
