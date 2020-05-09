@@ -1,9 +1,0 @@
-README.md
-getplaylist.py
-setup.py
-getplaylist.egg-info/PKG-INFO
-getplaylist.egg-info/SOURCES.txt
-getplaylist.egg-info/dependency_links.txt
-getplaylist.egg-info/entry_points.txt
-getplaylist.egg-info/requires.txt
-getplaylist.egg-info/top_level.txt

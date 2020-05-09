@@ -1,8 +1,0 @@
-README.md
-getplaylist.py
-gain.egg-info/PKG-INFO
-gain.egg-info/SOURCES.txt
-gain.egg-info/dependency_links.txt
-gain.egg-info/not-zip-safe
-gain.egg-info/requires.txt
-gain.egg-info/top_level.txt
