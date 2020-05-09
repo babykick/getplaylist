@@ -1,7 +1,13 @@
 # Usage
+
+Example: 
 ```
-> getplaylist 
+> getplaylist "https://www.youtube.com/watch?v=AkFqg5wAuFk&list=PLxYReOMcJaFfGz1daUgyTUh9SerOLl3Vz" --savedir "D:/pantera"
+> getplaylist "https://www.bilibili.com/video/BV1BJ411U7hW?from=search&seid=3542744301823873168" --savedir "D:/course"
 > getplaylist --listfile list.txt
+```
+
+Command line:
 ```
 usage: getplaylist [-h] [--listfile LISTFILE] [--savedir SAVEDIR] [--useindex]
                    [--displayid]
@@ -16,3 +22,4 @@ optional arguments:
   --savedir SAVEDIR    directory downloaded video saved
   --useindex           use index or not in format
   --displayid          add display id in output template
+  ```
