@@ -27,6 +27,7 @@ def _argparse():
     parser.add_argument('--savedir', default=cur_dir, help='directory downloaded video saved')
     parser.add_argument('--useindex', action='store_true', help='use index or not in format')
     parser.add_argument('--displayid', action='store_true', help='add display id in output template')
+    parser.add_argument('--extraargs', help='extra arguments')
     
     return parser.parse_args()
 
@@ -58,6 +59,7 @@ class BaseDownloader:
         self.url = args.pop('url', '')
         self.listfile = args.pop('listfile', '')
         self.display_id = args.pop('displayid', '')
+        self.extra_args = args.pop('extraargs', '')
         
     def get_fetcher(self, url):
         # self.save_dir = self.save_dir.replace("\\", "/")
@@ -65,7 +67,7 @@ class BaseDownloader:
         return f'youtube-dl "{url}" -o "{format}" {self.get_extra_args()} {"--proxy " + self.proxy if self.proxy else ""}' 
 
     def get_extra_args(self):
-        return ''
+        return self.extra_args
     
     def download_from_list(self, info, select_downloader=False):
         print('Total', len(info))
@@ -131,7 +133,11 @@ class YoutubeDownloader(BaseDownloader):
         if  self.use_origin and self.url and 'list=' in self.url:
             return '--yes-playlist'
         return ""
-        
+
+
+class GenericDownloader(BaseDownloader):
+    use_origin = True
+
 
 class ListFileDownloader(BaseDownloader):
     def download(self):
@@ -147,8 +153,8 @@ def get_downloader(url):
     if ex:
         return ex
     else:
-        raise NotImplementedError(f'No extractor found for {domain_name}')
-    
+        return GenericDownloader
+
 
 def download_list(args):
     if args.listfile:
