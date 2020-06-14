@@ -142,7 +142,7 @@ class GenericDownloader(BaseDownloader):
 class ListFileDownloader(BaseDownloader):
     def download(self):
         if self.listfile and os.path.exists(self.listfile):
-            info = [{'url': line} for line in open(self.listfile)]
+            info = [{'url': line} for line in open(self.listfile) if line.strip()]
 
         self.download_from_list(info, select_downloader=True)
 
