@@ -88,7 +88,7 @@ class BaseDownloader:
         info = []
         if self.url:
             if self.use_origin:
-                cmd = self.get_fetcher()
+                cmd = self.get_fetcher(self.url)
                 print(cmd)
                 subprocess.run(shlex.split(cmd))
                 return
