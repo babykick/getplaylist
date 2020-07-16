@@ -23,11 +23,11 @@ def get_sys_proxy():
 def _argparse():
     parser = argparse.ArgumentParser()
     parser.add_argument('url', nargs='?', help='target playlist url')
-    parser.add_argument('--listfile', help='file containing video links')
+    parser.add_argument('--listfile', default='', help='file containing video links')
     parser.add_argument('--savedir', default=cur_dir, help='directory downloaded video saved')
     parser.add_argument('--useindex', action='store_true', help='use index or not in format')
-    parser.add_argument('--displayid', action='store_true', help='add display id in output template')
-    parser.add_argument('--extraargs', help='extra arguments')
+    parser.add_argument('--displayid', default='', action='store_true', help='add display id in output template')
+    parser.add_argument('--extraargs', default='', help='extra arguments')
     
     return parser.parse_args()
 
@@ -52,14 +52,14 @@ class BaseDownloader:
     display_id = False
 
     def __init__(self, **args):
-        self.args = args.copy()
-        self.use_index = self.use_index or args.pop('useindex', False)
-        self.save_dir = args.pop('savedir', '')
-        self.proxy = args.pop('proxy', '')
-        self.url = args.pop('url', '')
-        self.listfile = args.pop('listfile', '')
-        self.display_id = args.pop('displayid', '')
-        self.extra_args = args.pop('extraargs', '')
+        self.args = args        
+        self.use_index = self.use_index or args.get('useindex', False)
+        self.save_dir = args.get('savedir', '')
+        self.proxy = args.get('proxy', '')
+        self.url = args.get('url', '')
+        self.listfile = args.get('listfile', '')
+        self.display_id = args.get('displayid', '')
+        self.extra_args = args.get('extraargs', '')
         
     def get_fetcher(self, url):
         # self.save_dir = self.save_dir.replace("\\", "/")
@@ -75,6 +75,7 @@ class BaseDownloader:
             url = v['url'].strip()
             print(url)
             dl = get_downloader(url)(**self.args) if select_downloader else self
+            print('Select', dl)
             if 'title' in v:
                 cmd = dl.get_fetcher(url).replace(r'%(title)s', v['title'])
             else:
