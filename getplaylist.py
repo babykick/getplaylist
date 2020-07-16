@@ -52,7 +52,6 @@ class BaseDownloader:
     display_id = False
 
     def __init__(self, **args):
-        self.args = args        
         self.use_index = self.use_index or args.get('useindex', False)
         self.save_dir = args.get('savedir', '')
         self.proxy = args.get('proxy', '')
@@ -60,6 +59,8 @@ class BaseDownloader:
         self.listfile = args.get('listfile', '')
         self.display_id = args.get('displayid', '')
         self.extra_args = args.get('extraargs', '')
+
+        self.args = args 
         
     def get_fetcher(self, url):
         # self.save_dir = self.save_dir.replace("\\", "/")
