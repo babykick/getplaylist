@@ -41,17 +41,20 @@ def fetch_page(url, json=False):
     s.headers = {
                  'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
                 #  'referer': f'http://{urlparse(url).netloc}',
-                 'sec-fetch-dest': 'document',
-                 'sec-fetch-mode': 'navigate',
-                 'sec-fetch-site': 'none',
-                 'sec-fetch-user': '?1',
-                 'upgrade-insecure-requests': '1'
+                  'referer': 'https://space.bilibili.com',
+                #  'sec-fetch-dest': 'document',
+                #  'sec-fetch-mode': 'navigate',
+                #  'sec-fetch-site': 'none',
+                #  'sec-fetch-user': '?1',
+                #  'upgrade-insecure-requests': '1'
                  }
 
     r = s.get(url)
-    if json:
-        return r.json()
-    return r.text
+    if r.ok:
+        if json:
+            return r.json()
+        return r.text
+    return None
 
 
 class BaseDownloader:
@@ -72,30 +75,31 @@ class BaseDownloader:
         
     def get_fetcher(self, url):
         # self.save_dir = self.save_dir.replace("\\", "/")
-        format = os.path.join(self.save_dir, f'{"" if not self.use_index else "%(playlist_index)s - "}%(title)s({"%(display_id)s" if self.display_id else ""}).%(ext)s')
+        playlist_index = '%(playlist_index)s - ' if self.use_index else ''
+        title = '%(title)s' + ('(%(display_id)s)' if self.display_id else '')
+        format = os.path.join(self.save_dir, f'{playlist_index}{title}.%(ext)s')
+        print('format', format)
         return f'youtube-dl "{url}" -o "{format}" {self.get_extra_args()} {"--proxy " + self.proxy if self.proxy else ""}' 
 
     def get_extra_args(self):
         return self.extra_args
     
     def download_from_list(self, info, select_downloader=False):
-        print('Total', len(info))
         for v in info:
             url = v['url'].strip()
             print(url)
             dl = get_downloader(url)(**self.args) if select_downloader else self
-            print('Select', dl)
+            print('Select', dl, 'vinfo:', v)
             if 'title' in v:
                 cmd = dl.get_fetcher(url).replace(r'%(title)s', v['title'])
             else:
                 cmd = dl.get_fetcher(url)
-            print(cmd)
             cmd = shlex.split(cmd)
             subprocess.run(cmd)
 
     def download(self):
         save_dir = self.save_dir
-        info = []
+        info = None
         if self.url:
             if self.use_origin:
                 cmd = self.get_fetcher(self.url)
@@ -105,11 +109,11 @@ class BaseDownloader:
             else:
                 print(self.url)
                 page = fetch_page(self.url)
-                print('page', page)
                 info = self.extract(page)
+                pprint(info)
 
         
-        if len(info) == 0:
+        if info is None:
             print('No playlist or video url provided')
             exit()
         
@@ -130,15 +134,19 @@ class BilibiliDownloader(BaseDownloader):
     def extract(self, page):
         if re.search('video/?$', self.url):
             print('download from posts', self.url)
-            return self._extract_from_posts(page)
+            yield from self._extract_from_posts(page)
         elif re.search('/video/\w+', self.url):
-            return self._extrace_from_playlist(page)
+            yield from self._extrace_from_playlist(page)
     
     def _extract_from_posts(self, page):
         mid = self.url.split('/video')[0].split('/')[-1]
-        url = f'https://api.bilibili.com/x/space/arc/search?mid={mid}&ps=10000&tid=0&pn=1&keyword=&order=pubdate&jsonp=jsonp'
-        data = fetch_page(url, json=True)
-        pprint(data)
+        for page_num in range(1, 200):
+            url = f'https://api.bilibili.com/x/space/arc/search?mid={mid}&ps=30&tid=0&pn={page_num}&keyword=&order=pubdate&jsonp=jsonp'
+            data = fetch_page(url, json=True)
+            if len(data['data']['list']['vlist']) == 0:
+                break
+            for v in data['data']['list']['vlist']:
+                yield {'url': f'https://bilibili.com/video/{v["bvid"]}', 'title': v['title']}
 
     def _extrace_from_playlist(self, page):
         data = json.loads(re.search(r'window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s', page, flags=re.DOTALL).group(1))
