@@ -6,6 +6,7 @@ import shlex
 import re
 import json
 from urllib.parse import urlparse, urljoin
+from pprint import pprint
 
 import requests
 from lxml.html import fromstring
@@ -35,14 +36,21 @@ def _argparse():
 args = _argparse()
 
 
-def fetch_page(url):
+def fetch_page(url, json=False):
     s = requests.session()
     s.headers = {
                  'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36',
-                 'referer': f'http://{urlparse(url).netloc}'
+                #  'referer': f'http://{urlparse(url).netloc}',
+                 'sec-fetch-dest': 'document',
+                 'sec-fetch-mode': 'navigate',
+                 'sec-fetch-site': 'none',
+                 'sec-fetch-user': '?1',
+                 'upgrade-insecure-requests': '1'
                  }
 
     r = s.get(url)
+    if json:
+        return r.json()
     return r.text
 
 
@@ -95,7 +103,9 @@ class BaseDownloader:
                 subprocess.run(shlex.split(cmd))
                 return
             else:
+                print(self.url)
                 page = fetch_page(self.url)
+                print('page', page)
                 info = self.extract(page)
 
         
@@ -117,7 +127,20 @@ class YoukuDownloader(BaseDownloader):
 class BilibiliDownloader(BaseDownloader):
     use_index = False
 
-    def extract(cls, page):
+    def extract(self, page):
+        if re.search('video/?$', self.url):
+            print('download from posts', self.url)
+            return self._extract_from_posts(page)
+        elif re.search('/video/\w+', self.url):
+            return self._extrace_from_playlist(page)
+    
+    def _extract_from_posts(self, page):
+        mid = self.url.split('/video')[0].split('/')[-1]
+        url = f'https://api.bilibili.com/x/space/arc/search?mid={mid}&ps=10000&tid=0&pn=1&keyword=&order=pubdate&jsonp=jsonp'
+        data = fetch_page(url, json=True)
+        pprint(data)
+
+    def _extrace_from_playlist(self, page):
         data = json.loads(re.search(r'window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s', page, flags=re.DOTALL).group(1))
         aid = data['aid']
         return [
@@ -143,10 +166,11 @@ class GenericDownloader(BaseDownloader):
 
 class ListFileDownloader(BaseDownloader):
     def download(self):
+        info = None
         if self.listfile and os.path.exists(self.listfile):
             info = [{'url': line} for line in open(self.listfile) if line.strip()]
-
-        self.download_from_list(info, select_downloader=True)
+        if info:
+            self.download_from_list(info, select_downloader=True)
 
 
 def get_downloader(url):
@@ -158,7 +182,7 @@ def get_downloader(url):
         return GenericDownloader
 
 
-def download_list(args):
+def main():
     if args.listfile:
         dl = ListFileDownloader(**vars(args))
     elif args.url:
@@ -166,11 +190,8 @@ def download_list(args):
     else:
         print('url or list file not given')
         exit()
+    print('select downloader', dl)
     dl.download()
-
-
-def main():
-    download_list(args)
 
 
 if __name__ == '__main__':
