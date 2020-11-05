@@ -140,13 +140,19 @@ class BilibiliDownloader(BaseDownloader):
     
     def _extract_from_posts(self, page):
         mid = self.url.split('/video')[0].split('/')[-1]
-        for page_num in range(1, 200):
+        page_num = 1
+        while True:
             url = f'https://api.bilibili.com/x/space/arc/search?mid={mid}&ps=30&tid=0&pn={page_num}&keyword=&order=pubdate&jsonp=jsonp'
-            data = fetch_page(url, json=True)
+            try:
+                data = fetch_page(url, json=True)
+            except Exception as e:
+                print(str(e))
+                break
             if len(data['data']['list']['vlist']) == 0:
                 break
             for v in data['data']['list']['vlist']:
                 yield {'url': f'https://bilibili.com/video/{v["bvid"]}', 'title': v['title']}
+            page_num += 1
 
     def _extrace_from_playlist(self, page):
         data = json.loads(re.search(r'window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s', page, flags=re.DOTALL).group(1))
