@@ -5,6 +5,7 @@ Example:
 > getplaylist "https://www.youtube.com/watch?v=AkFqg5wAuFk&list=PLxYReOMcJaFfGz1daUgyTUh9SerOLl3Vz" --savedir "D:/pantera"
 > getplaylist "https://www.bilibili.com/video/BV1BJ411U7hW?from=search&seid=3542744301823873168" --savedir "D:/course"
 > getplaylist --listfile list.txt
+> getplaylist https://space.bilibili.com/412127397/video --pglimit 1 # 仅下载第一页
 ```
 
 Command line:

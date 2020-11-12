@@ -29,6 +29,7 @@ def _argparse():
     parser.add_argument('--useindex', action='store_true', help='use index or not in format')
     parser.add_argument('--displayid', default='', action='store_true', help='add display id in output template')
     parser.add_argument('--extraargs', default='', help='extra arguments')
+    parser.add_argument('--pglimit', help='first pages limit to download')
     
     return parser.parse_args()
 
@@ -140,6 +141,7 @@ class BilibiliDownloader(BaseDownloader):
     
     def _extract_from_posts(self, page):
         mid = self.url.split('/video')[0].split('/')[-1]
+        pglimit = self.args.get('pglimit')
         page_num = 1
         while True:
             url = f'https://api.bilibili.com/x/space/arc/search?mid={mid}&ps=30&tid=0&pn={page_num}&keyword=&order=pubdate&jsonp=jsonp'
@@ -153,6 +155,8 @@ class BilibiliDownloader(BaseDownloader):
             for v in data['data']['list']['vlist']:
                 yield {'url': f'https://bilibili.com/video/{v["bvid"]}', 'title': v['title']}
             page_num += 1
+            if pglimit and page_num > int(pglimit):
+                break
 
     def _extrace_from_playlist(self, page):
         data = json.loads(re.search(r'window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s', page, flags=re.DOTALL).group(1))
