@@ -1,5 +1,4 @@
 import os
-import sys
 import subprocess
 import argparse
 import shlex
@@ -95,6 +94,7 @@ class BaseDownloader:
                 cmd = dl.get_fetcher(url).replace(r'%(title)s', v['title'])
             else:
                 cmd = dl.get_fetcher(url)
+            print('cmd', cmd)
             cmd = shlex.split(cmd)
             subprocess.run(cmd)
 
@@ -133,11 +133,12 @@ class BilibiliDownloader(BaseDownloader):
     use_index = False
 
     def extract(self, page):
-        if re.search('video/?$', self.url):
+        if re.search('/video/?$', self.url):
             print('download from posts', self.url)
             yield from self._extract_from_posts(page)
         elif re.search('/video/\w+', self.url):
-            yield from self._extrace_from_playlist(page)
+            print('download from playlist', self.url)
+            yield from self._extract_from_playlist(page)
     
     def _extract_from_posts(self, page):
         mid = self.url.split('/video')[0].split('/')[-1]
@@ -158,7 +159,7 @@ class BilibiliDownloader(BaseDownloader):
             if pglimit and page_num > int(pglimit):
                 break
 
-    def _extrace_from_playlist(self, page):
+    def _extract_from_playlist(self, page):
         data = json.loads(re.search(r'window.__INITIAL_STATE__=(.*?);\(function\(\)\{var s', page, flags=re.DOTALL).group(1))
         aid = data['aid']
         return [
