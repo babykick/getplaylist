@@ -79,7 +79,7 @@ class BaseDownloader:
         title = '%(title)s' + ('(%(display_id)s)' if self.display_id else '')
         format = os.path.join(self.save_dir, f'{playlist_index}{title}.%(ext)s')
         print('format', format)
-        return f'youtube-dl "{url}" -o "{format}" {self.get_extra_args()} {"--proxy " + self.proxy if self.proxy else ""}' 
+        return f'youtube-dl "{url}" -o "{format}" -ci  {"--proxy " + self.proxy if self.proxy else ""} {self.get_extra_args()}' 
 
     def get_extra_args(self):
         return self.extra_args
