@@ -29,6 +29,7 @@ def _argparse():
     parser.add_argument('--displayid', default='', action='store_true', help='add display id in output template')
     parser.add_argument('--extraargs', default='', help='extra arguments')
     parser.add_argument('--pglimit', help='first pages limit to download')
+    parser.add_argument('--delay', help='interval seconds between each downloading')
     
     return parser.parse_args()
 
@@ -175,7 +176,7 @@ class YoutubeDownloader(BaseDownloader):
 
     def get_extra_args(self):
         if  self.use_origin and self.url and 'list=' in self.url:
-            return '--yes-playlist'
+            return '--yes-playlist' + ' ' + super().get_extra_args()
         return ""
 
 
