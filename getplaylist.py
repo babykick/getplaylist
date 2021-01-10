@@ -177,7 +177,7 @@ class YoutubeDownloader(BaseDownloader):
     def get_extra_args(self):
         if  self.use_origin and self.url and 'list=' in self.url:
             return '--yes-playlist' + ' ' + super().get_extra_args()
-        return ""
+        return super().get_extra_args()
 
 
 class GenericDownloader(BaseDownloader):
