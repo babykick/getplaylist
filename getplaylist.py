@@ -30,7 +30,7 @@ def _argparse():
     parser.add_argument('--extraargs', default='', help='extra arguments')
     parser.add_argument('--pglimit', help='first pages limit to download')
     parser.add_argument('--delay', help='interval seconds between each downloading')
-    
+    parser.add_argument('--reversed', action='store_true', help='reversed playlist')
     return parser.parse_args()
 
 
@@ -71,6 +71,7 @@ class BaseDownloader:
         self.listfile = args.get('listfile', '')
         self.display_id = args.get('displayid', '')
         self.extra_args = args.get('extraargs', '')
+        self.reversed = args.get('reversed', False)
 
         self.args = args 
         
@@ -80,7 +81,9 @@ class BaseDownloader:
         title = '%(title)s' + ('(%(display_id)s)' if self.display_id else '')
         format = os.path.join(self.save_dir, f'{playlist_index}{title}.%(ext)s')
         print('format', format)
-        return f'youtube-dl "{url}" -o "{format}" -ci  {"--proxy " + self.proxy if self.proxy else ""} {self.get_extra_args()}' 
+        reversed = '--playlist-reverse' if self.reversed else ''
+        proxy = '--proxy ' + self.proxy if self.proxy else ''
+        return f'youtube-dl "{url}" -o "{format}" -ci {reversed} {proxy} {self.get_extra_args()}' 
 
     def get_extra_args(self):
         return self.extra_args
